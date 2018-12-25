@@ -1,0 +1,40 @@
+version: '3'
+services:
+    elastic:
+     image: docker.elastic.co/elasticsearch/elasticsearch:6.5.2
+     container_name: elasticsearch1
+     environment:
+       - node.name=es01
+     ports:
+       - 9200:9200
+       - 9300:9300
+     volumes:
+       - ./data:/usr/share/elasticsearch/data
+    kibana:
+     image: docker.elastic.co/kibana/kibana:6.5.2
+     container_name: kibana1
+     environment:
+       SERVER_NAME: kibana
+     ports:
+       - 32773:5601
+     volumes:
+       - /root/docker/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+     depends_on: ['elastic']
+     restart: always
+    logstash:
+     image: docker.elastic.co/logstash/logstash:6.5.2
+     volumes:
+       - /root/docker/logstash/pipeline:/usr/share/logstash/pipeline
+     ports:
+       - 32772:5044
+       - 6000:6000
+       - 6001:6001
+       - 32771:9600
+     depends_on: ['elastic']
+     restart: always
+     deploy:
+      restart_policy:
+       condition: on-failure
+       delay: 5s
+       max_attempts: 3
+       window: 120s
